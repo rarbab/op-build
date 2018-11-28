@@ -45,6 +45,9 @@ config BR2_SKIBOOT_CUSTOM_REPO_URL
 config BR2_SKIBOOT_DEVICETREE
 	bool "Build device trees"
 
+config BR2_SKIBOOT_DEBUG
+	bool "Enable debug build"
+
 endif
 
 endmenu
