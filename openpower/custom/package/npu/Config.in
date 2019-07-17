@@ -1,0 +1,3 @@
+config BR2_PACKAGE_NPU
+	bool "npu"
+	depends on BR2_LINUX_KERNEL
