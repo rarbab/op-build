@@ -1,0 +1,10 @@
+#!/bin/sh
+
+[ -z "${TARGET_DIR}" ] && exit 1
+
+rm -rf \
+	${TARGET_DIR}/etc/init.d/S01syslogd \
+	${TARGET_DIR}/etc/init.d/S02klogd \
+	${TARGET_DIR}/etc/init.d/S20urandom \
+	${TARGET_DIR}/etc/init.d/S40network \
+	${TARGET_DIR}/etc/network/
