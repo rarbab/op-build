@@ -1,0 +1,14 @@
+#!/bin/sh
+
+MODFILE=/etc/modules
+[ ! -f $MODFILE ] && exit 0
+
+case "$1" in
+	start)
+		grep -v "^#" $MODFILE | xargs modprobe -a ;;
+	stop)
+		grep -v "^#" $MODFILE | xargs modprobe -r ;;
+	*)
+		echo "Usage: $0 {start|stop}"
+		exit 1
+esac
