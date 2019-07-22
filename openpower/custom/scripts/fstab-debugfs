@@ -1,0 +1,12 @@
+#!/bin/bash
+
+set -x
+
+[[ -z "$TARGET_DIR" ]] && exit
+fstab=$TARGET_DIR/etc/fstab
+
+grep -q debugfs $fstab && exit
+
+cat >>$fstab <<EOL
+debugfs		/sys/kernel/debug	debugfs	defaults	0	0
+EOL
