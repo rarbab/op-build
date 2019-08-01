@@ -1,0 +1,63 @@
+#!/bin/sh
+
+# Simple script to extract petitboot network configuration from NVRAM and apply
+# it.
+#
+# Example nvram configuration:
+# nvram --print-config=petitboot,network
+# 70:e2:84:14:23:97,static,9.3.185.198/24,9.3.185.1 dns,9.3.1.200
+
+DHCP=udhcp
+IP=ip
+
+if [ "$2" = "test" ]; then
+    DHCP="echo $DHCP"
+    IP="echo $IP"
+    config="54:ee:75:5e:97:e7,static,9.3.185.198/24,9.3.185.1 dns,9.3.1.200"
+else
+    config=$(nvram --print-config=petitboot,network)
+fi
+
+case "$1" in
+    start)
+	if [ -z "$config" ]; then
+	    echo "No petitboot network configuration found. Attempting dhcp."
+	    mode="dhcp"
+	else
+	    echo "Got config string $config"
+	    mode=$(echo $config | cut -d, -f2)
+	fi
+
+	mac_addr=$(echo $config | cut -d, -f1)
+	interface=$(ip link | grep -B1 $mac_addr | head -n1 | cut -d: -f2)
+
+	if [ -z $interface ]; then
+	    echo "Interface not found. Aborting."
+	    exit 1
+	fi
+
+	if [ $mode = "static" ]; then
+	    ip_addr=$(echo $config | cut -d, -f3)
+	    gw_addr=$(echo $config | cut -d, -f4 | cut -d" " -f1)
+	    dns=$(echo $config | cut -d" " -f2 | cut -d, -f2)
+	fi
+
+	echo "Configuring $interface using $mode."
+
+	$IP link set $interface up
+
+	if [ $mode = "dhcp" ]; then
+	    $DHCP -i $interface
+	elif [ $mode = "static" ]; then
+	    $IP addr add $ip_addr dev $interface
+	    $IP route add default via $gw_addr
+	    echo "nameserver $dns" >> /etc/resolv.conf
+	else
+	    echo "Unknown mode $mode. Aborting."
+	fi
+	;;
+    *)
+	exit 0
+esac
+
+exit 0
