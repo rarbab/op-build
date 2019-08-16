@@ -1,0 +1,72 @@
+From 814cfe72a1888c5677e03cf4a1eb2829978a16c3 Mon Sep 17 00:00:00 2001
+From: Reza Arbab <arbab@linux.ibm.com>
+Date: Fri, 9 Aug 2019 12:52:53 -0500
+Subject: [PATCH 2/4] Add conftest for put_user_pages()
+
+---
+ kernel/conftest.sh                  | 16 ++++++++++++++++
+ kernel/nvidia-uvm/nvidia-uvm.Kbuild |  1 +
+ kernel/nvidia-uvm/uvm8_tools.c      |  2 ++
+ 3 files changed, 19 insertions(+)
+
+diff --git a/kernel/conftest.sh b/kernel/conftest.sh
+index 654b8a722053..89bea3e60cc4 100755
+--- a/kernel/conftest.sh
++++ b/kernel/conftest.sh
+@@ -3242,6 +3242,22 @@ compile_test() {
+ 
+             compile_check_conftest "$CODE" "NV_DRM_ATOMIC_HELPER_SWAP_STATE_RETURN_INT" | append_conftest "types"
+         ;;
++
++        put_user_pages)
++            #
++            # Determine if the put_user_pages() function is present.
++            #
++            # Added by commit fc1d8e7cca2d ("mm: introduce put_user_page*(),
++            # placeholder versions") in v5.2
++            #
++            CODE="
++            #include <linux/mm.h>
++            void conftest_put_user_pages(void) {
++                put_user_pages();
++            }"
++
++            compile_check_conftest "$CODE" "NV_PUT_USER_PAGES_PRESENT" "" "functions"
++        ;;
+     esac
+ }
+ 
+diff --git a/kernel/nvidia-uvm/nvidia-uvm.Kbuild b/kernel/nvidia-uvm/nvidia-uvm.Kbuild
+index ec295f58aefb..2bb20b9609fe 100644
+--- a/kernel/nvidia-uvm/nvidia-uvm.Kbuild
++++ b/kernel/nvidia-uvm/nvidia-uvm.Kbuild
+@@ -94,6 +94,7 @@ NV_CONFTEST_FUNCTION_COMPILE_TESTS += radix_tree_empty
+ NV_CONFTEST_FUNCTION_COMPILE_TESTS += radix_tree_replace_slot
+ NV_CONFTEST_FUNCTION_COMPILE_TESTS += pnv_npu2_init_context
+ NV_CONFTEST_FUNCTION_COMPILE_TESTS += do_gettimeofday
++NV_CONFTEST_FUNCTION_COMPILE_TESTS += put_user_pages
+ 
+ NV_CONFTEST_TYPE_COMPILE_TESTS += proc_dir_entry
+ NV_CONFTEST_TYPE_COMPILE_TESTS += irq_handler_t
+diff --git a/kernel/nvidia-uvm/uvm8_tools.c b/kernel/nvidia-uvm/uvm8_tools.c
+index 82c890587c10..4d6186071730 100644
+--- a/kernel/nvidia-uvm/uvm8_tools.c
++++ b/kernel/nvidia-uvm/uvm8_tools.c
+@@ -206,12 +206,14 @@ static bool tracker_is_counter(uvm_tools_event_tracker_t *event_tracker)
+     return event_tracker != NULL && !event_tracker->is_queue;
+ }
+ 
++#if !defined(NV_PUT_USER_PAGES_PRESENT)
+ static void put_user_pages(struct page **pages, NvU64 page_count)
+ {
+     NvU64 i;
+     for (i = 0; i < page_count; i++)
+         put_page(pages[i]);
+ }
++#endif
+ 
+ static void unmap_user_pages(struct page **pages, void *addr, NvU64 size)
+ {
+-- 
+2.18.1
+

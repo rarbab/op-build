@@ -1,0 +1,51 @@
+From bf1efe81c567f4be711eb496a2b9223cb58e4d28 Mon Sep 17 00:00:00 2001
+From: Reza Arbab <arbab@linux.ibm.com>
+Date: Fri, 9 Aug 2019 13:03:37 -0500
+Subject: [PATCH 3/4] Return vm_fault_t from vm_operations_struct functions
+
+Should use conftest magic for this, but just hack it in for now.
+---
+ kernel/nvidia-uvm/uvm8.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/kernel/nvidia-uvm/uvm8.c b/kernel/nvidia-uvm/uvm8.c
+index 44467988ecf1..3f347201ba03 100644
+--- a/kernel/nvidia-uvm/uvm8.c
++++ b/kernel/nvidia-uvm/uvm8.c
+@@ -166,13 +166,13 @@ static void uvm_destroy_vma_semaphore_pool(struct vm_area_struct *vma)
+ // If a fault handler is not set, paths like handle_pte_fault in older kernels
+ // assume the memory is anonymous. That would make debugging this failure harder
+ // so we force it to fail instead.
+-static int uvm_vm_fault_sigbus(struct vm_area_struct *vma, struct vm_fault *vmf)
++static vm_fault_t uvm_vm_fault_sigbus(struct vm_area_struct *vma, struct vm_fault *vmf)
+ {
+     UVM_DBG_PRINT_RL("Fault to address 0x%lx in disabled vma\n", nv_page_fault_va(vmf));
+     return VM_FAULT_SIGBUS;
+ }
+ 
+-static int uvm_vm_fault_sigbus_wrapper(struct vm_fault *vmf)
++static vm_fault_t uvm_vm_fault_sigbus_wrapper(struct vm_fault *vmf)
+ {
+ #if defined(NV_VM_OPS_FAULT_REMOVED_VMA_ARG)
+     return uvm_vm_fault_sigbus(vmf->vma, vmf);
+@@ -390,7 +390,7 @@ static void uvm_vm_close_managed(struct vm_area_struct *vma)
+         uvm_record_unlock_mmap_sem_write(&current->mm->mmap_sem);
+ }
+ 
+-static int uvm_vm_fault(struct vm_area_struct *vma, struct vm_fault *vmf)
++static vm_fault_t uvm_vm_fault(struct vm_area_struct *vma, struct vm_fault *vmf)
+ {
+     uvm_va_space_t *va_space = uvm_va_space_get(vma->vm_file);
+     uvm_va_block_t *va_block;
+@@ -507,7 +507,7 @@ convert_error:
+     }
+ }
+ 
+-static int uvm_vm_fault_wrapper(struct vm_fault *vmf)
++static vm_fault_t uvm_vm_fault_wrapper(struct vm_fault *vmf)
+ {
+ #if defined(NV_VM_OPS_FAULT_REMOVED_VMA_ARG)
+     return uvm_vm_fault(vmf->vma, vmf);
+-- 
+2.18.1
+

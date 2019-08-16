@@ -1,0 +1,48 @@
+From 46e856155f3378d894a7b0b919dfa54bf764edf1 Mon Sep 17 00:00:00 2001
+From: Reza Arbab <arbab@linux.ibm.com>
+Date: Fri, 9 Aug 2019 13:23:29 -0500
+Subject: [PATCH 4/4] Don't use mutex_destroy()
+
+FATAL: modpost: GPL-incompatible module nvidia.ko uses GPL-only symbol 'mutex_destroy'
+---
+ kernel/nvidia/nvlink_linux.c | 10 ++++++++--
+ 1 file changed, 8 insertions(+), 2 deletions(-)
+
+diff --git a/kernel/nvidia/nvlink_linux.c b/kernel/nvidia/nvlink_linux.c
+index 546ace947266..2141dd72788c 100644
+--- a/kernel/nvidia/nvlink_linux.c
++++ b/kernel/nvidia/nvlink_linux.c
+@@ -282,6 +282,12 @@ static const struct file_operations nvlink_fops = {
+ #endif
+ };
+ 
++static void _mutex_destroy(struct mutex *lock)
++{
++	WARN_ON(mutex_is_locked(lock));
++	lock->magic = NULL;
++}
++
+ int __init nvlink_core_init(void)
+ {
+     NvlStatus ret_val;
+@@ -344,7 +350,7 @@ alloc_chrdev_region_fail:
+     nvlink_lib_unload();
+ 
+ nvlink_lib_initialize_fail:
+-    mutex_destroy(&nvlink_drvctx.lock);
++    _mutex_destroy(&nvlink_drvctx.lock);
+     return rc;
+ }
+ 
+@@ -363,7 +369,7 @@ void nvlink_core_exit(void)
+ 
+     nvlink_lib_unload();
+ 
+-    mutex_destroy(&nvlink_drvctx.lock);
++    _mutex_destroy(&nvlink_drvctx.lock);
+ 
+     nvlink_print(NVLINK_DBG_INFO, "Unregistered the Nvlink Core, major device number %d\n",
+                  nvlink_drvctx.major_devnum);
+-- 
+2.18.1
+
