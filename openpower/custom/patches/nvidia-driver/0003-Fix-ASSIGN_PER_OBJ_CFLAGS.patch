@@ -1,0 +1,42 @@
+From b859932041b4d5037d7519eb77bba8cd8e58a464 Mon Sep 17 00:00:00 2001
+From: Reza Arbab <arbab@linux.ibm.com>
+Date: Thu, 3 Oct 2019 10:46:00 -0500
+Subject: [PATCH 3/3] Fix ASSIGN_PER_OBJ_CFLAGS
+
+Post commit 54b8ae66ae1a ("kbuild: change *FLAGS_<basetarget>.o to take
+the path relative to $(obj)"), we should use
+
+  CFLAGS_path/to/foo.o
+
+instead of
+
+  CFLAGS_foo.o
+
+Keep backward compatibility by only triggering this new behavior if
+$(target-stem) is defined, which is a side effect of the above commit.
+---
+ kernel/Kbuild | 6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
+
+diff --git a/kernel/Kbuild b/kernel/Kbuild
+index 105b5edd145d..c292430fc498 100644
+--- a/kernel/Kbuild
++++ b/kernel/Kbuild
+@@ -28,9 +28,13 @@ NV_SPECTRE_V2 = 0
+ # $(2): The CFLAGS to add for those object files.
+ #
+ 
++# Commit 54b8ae66ae1a: If $(target-stem) is defined in Makefile.lib, use
++# CFLAGS_path/to/foo.o instead of CFLAGS_foo.o.
++include scripts/Makefile.lib
++
+ ASSIGN_PER_OBJ_CFLAGS = \
+  $(foreach _cflags_variable, \
+- $(addprefix CFLAGS_,$(notdir $(1))), \
++ $(addprefix CFLAGS_,$(if $(filter file,$(origin target-stem)),$(1),$(notdir $(1)))), \
+  $(eval $(_cflags_variable) += $(2)))
+ 
+ 
+-- 
+1.8.3.1
+

@@ -1,0 +1,30 @@
+From 0ed58d4be053d556d0cf546d07e7717c0675d834 Mon Sep 17 00:00:00 2001
+From: Reza Arbab <arbab@linux.ibm.com>
+Date: Thu, 3 Oct 2019 10:38:19 -0500
+Subject: [PATCH 2/3] Fix Module.symvers export check
+
+Commit cb9b55d21fe0 ("modpost: add support for symbol namespaces") added
+a new column to Module.symvers.
+
+Change this check to now look in the fourth column as well as the third.
+---
+ kernel/conftest.sh | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
+
+diff --git a/kernel/conftest.sh b/kernel/conftest.sh
+index 89bea3e60cc4..a8112344c0eb 100755
+--- a/kernel/conftest.sh
++++ b/kernel/conftest.sh
+@@ -3700,8 +3700,7 @@ case "$6" in
+         TAB='	'
+ 
+         if [ -f "$OUTPUT/Module.symvers" ] && \
+-             grep -e "^[^${TAB}]*${TAB}[^${TAB}]*${TAB}vmlinux" \
+-                     "$OUTPUT/Module.symvers" >/dev/null 2>&1; then
++             cut -f 3,4 "$OUTPUT/Module.symvers" | grep -qw vmlinux; then
+             exit 0
+         fi
+ 
+-- 
+1.8.3.1
+
