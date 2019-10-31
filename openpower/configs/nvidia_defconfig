@@ -1,5 +1,6 @@
 BR2_powerpc64le=y
 BR2_powerpc_power8=y
+BR2_PACKAGE_HOST_LINUX_HEADERS_CUSTOM_5_0=y
 BR2_BINUTILS_EXTRA_CONFIG_OPTIONS="--enable-targets=powerpc64-linux"
 BR2_EXTRA_GCC_CONFIG_OPTIONS="--enable-targets=powerpc64-linux --disable-libsanitizer"
 BR2_ROOTFS_DEVICE_TABLE="system/device_table.txt ../openpower/custom/device_table/sshd.txt"
@@ -7,6 +8,8 @@ BR2_TARGET_GENERIC_GETTY_PORT="hvc0"
 BR2_ROOTFS_OVERLAY="../openpower/custom/overlay/opal ../openpower/custom/overlay/sshd ../openpower/custom/overlay/npu ../openpower/custom/overlay/nvidia-driver"
 BR2_ROOTFS_POST_BUILD_SCRIPT="../openpower/custom/scripts/fstab-debugfs"
 BR2_LINUX_KERNEL=y
+BR2_LINUX_KERNEL_CUSTOM_VERSION=y
+BR2_LINUX_KERNEL_CUSTOM_VERSION_VALUE="5.0.21"
 BR2_LINUX_KERNEL_DEFCONFIG="ppc64le"
 BR2_LINUX_KERNEL_CONFIG_FRAGMENT_FILES="$(BR2_EXTERNAL_OP_BUILD_PATH)/custom/configs/linux/npu.config"
 BR2_LINUX_KERNEL_VMLINUX=y
