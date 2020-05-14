@@ -7,7 +7,7 @@
 # nvram --print-config=petitboot,network
 # 70:e2:84:14:23:97,static,9.3.185.198/24,9.3.185.1 dns,9.3.1.200
 
-DHCP=udhcp
+DHCP=udhcpc
 IP=ip
 
 if [ "$2" = "test" ]; then
@@ -23,12 +23,13 @@ case "$1" in
 	if [ -z "$config" ]; then
 	    echo "No petitboot network configuration found. Attempting dhcp."
 	    mode="dhcp"
+	    mac_addr="c0:ff:ee:00:00:02"
 	else
 	    echo "Got config string $config"
 	    mode=$(echo $config | cut -d, -f2)
+	    mac_addr=$(echo $config | cut -d, -f1)
 	fi
 
-	mac_addr=$(echo $config | cut -d, -f1)
 	interface=$(ip link | grep -B1 $mac_addr | head -n1 | cut -d: -f2)
 
 	if [ -z $interface ]; then
